@@ -1,0 +1,67 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include "DHTesp.h"
+const int DHT_PIN = 15;
+DHTesp dhtSensor;
+
+const char *serverName = "http://159.223.68.164:1711";
+unsigned long lastTime = 0;
+
+unsigned long timerDelay = 5000;
+void setup() {
+  Serial.begin(115200);
+  dhtSensor.setup(DHT_PIN, DHTesp::DHT22);
+
+   WiFi.begin("Wokwi-GUEST", "", 6);
+ 
+  Serial.println("Connecting");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  Serial.println("Timer set to 5 seconds (timerDelay variable), it will take 5 seconds before publishing the first reading.");
+}
+
+void loop() {
+ 
+
+ // Send an HTTP POST request every 10 minutes
+  if ((millis() - lastTime) > timerDelay)
+  {
+
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      WiFiClient client;
+      HTTPClient http;
+
+ 
+      http.begin(client, serverName);
+
+      http.addHeader("Content-Type", "application/json");
+     TempAndHumidity  data = dhtSensor.getTempAndHumidity();
+  Serial.println("Temp: " + String(data.temperature, 2) + "°C");
+  Serial.println("Humidity: " + String(data.humidity, 1) + "%");
+  Serial.println("---");
+  delay(2000); // Wait for a new reading from the sensor (DHT22 has ~0.5Hz sample rate)
+
+      Serial.println("{\"deviceName\":\"dht22_01\",\"devEUI\":\"a8404151518379f9\",\"temperature\":" + String(data.temperature, 2) + ",\"humidity\":" + String(data.humidity, 1) + "}");
+      int httpResponseCode = http.POST("{\"deviceName\":\"dht22_01\",\"devEUI\":\"a8404151518379f9\",\"temperature\":" + String(data.temperature, 2) + ",\"humidity\":" + String(data.humidity, 1) + "}");
+
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+
+      // Free resources
+      http.end();
+    }
+    else
+    {
+      Serial.println("WiFi Disconnected");
+    }
+    lastTime = millis();
+  }
+}
