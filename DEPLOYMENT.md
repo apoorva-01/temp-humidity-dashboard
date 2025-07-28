@@ -115,13 +115,6 @@ Instead of cloning the repository directly on the server, we'll build the applic
       ```bash
       sudo mkdir -p /var/www/01-temp-hum
       ```
-    - Move the archive from `/tmp`, extract it, and then remove the archive.
-      ```bash
-      sudo mv /tmp/01-temp-hum.tar.gz /var/www/01-temp-hum/
-      cd /var/www/01-temp-hum
-      sudo tar -xzvf 01-temp-hum.tar.gz
-      sudo rm 01-temp-hum.tar.gz
-      ```
 
 3.  **Install Production Dependencies:**
     - Install only the production dependencies from your `package.json`.
