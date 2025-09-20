@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
     isAdmin: { type: Boolean, required: true, default: false },
     isSuperAdmin: { type: Boolean, required: true, default: false },
     email: { type: String, required: false, unique: true },
+    whatsappNumber: { type: String, required: false },
   }
 );
 

@@ -32,8 +32,6 @@ import {
   toggleSidebar,
 } from "../../../utils/LayoutContext";
 import Image from 'next/image';
-import logo from '../../../public/logo.svg';
-import jsCookie from 'js-cookie';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import WbSunnyOutlinedIcon from '@mui/icons-material/WbSunnyOutlined';
 import { styled } from '@mui/material/styles';
@@ -219,7 +217,7 @@ export default function Header() {
               // />
               <Image 
                 className={classes.logotypeIcon} 
-                src={logo} 
+                src='logo.svg' 
                 alt="logo" 
                 width={isTablet ? 50 : 100}
                 height={isTablet ? 5 : 30}

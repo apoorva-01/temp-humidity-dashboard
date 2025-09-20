@@ -9,8 +9,7 @@ import Layout from '../../Layout/Layout'
 import Image from 'next/image'
 // styles
 import useStyles from "./styles";
-// logo
-import logo from "./logo.svg";
+
 
 export default function Error() {
   var classes = useStyles();
@@ -19,7 +18,7 @@ export default function Error() {
     <Layout>
     <Grid container className={classes.container}>
       <div className={classes.logotype}>
-        <Image  className={classes.logotypeIcon} src={logo} alt="logo" ></Image>
+        <Image  className={classes.logotypeIcon} src='logo.svg' alt="logo" ></Image>
         <Typography variant="h3" color="white" className={classes.logotypeText}>
           IGSCS
         </Typography>
