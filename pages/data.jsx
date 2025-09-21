@@ -14,6 +14,8 @@ import Entries from '../models/Entries';
 import db from '../utils/db';
 import useAppStore from '../stores/useAppStore';
 import { useRouter } from 'next/router';
+import { getAllowedDeviceEUIs } from '../utils/deviceConfig';
+import { formatDateForDisplay } from '../utils/dateUtils';
 
 export default function Payload({ entries }) {
   const { user, isAuthenticated } = useAppStore();
@@ -64,8 +66,7 @@ export default function Payload({ entries }) {
             </TableHead>
             <TableBody>
               {entries.map((element) => {
-                var date = new Date(element.timestamp);
-                var formattted_time = date.toLocaleString();
+                var formattted_time = formatDateForDisplay(element.timestamp);
                 return (
                   <TableRow 
                     key={element._id || element.timestamp}
@@ -100,7 +101,15 @@ export default function Payload({ entries }) {
 export async function getServerSideProps() {
   try {
     await db.connect();
-    const entries = await Entries.find({}).sort({ 'timestamp': -1 }).limit(300).lean();
+    
+    // Get allowed device EUIs from configuration
+    const allowedEUIs = getAllowedDeviceEUIs();
+    
+    // Filter entries to only include allowed device EUIs
+    const entries = await Entries.find({ 
+      devEUI: { $in: allowedEUIs } 
+    }).sort({ 'timestamp': -1 }).limit(300).lean();
+    
     await db.disconnect();
     
     return {

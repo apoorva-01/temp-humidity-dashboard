@@ -201,7 +201,7 @@ export default function SignInSide() {
               }}
             >
               <Image
-                src='logo.svg'
+                src='/logo.svg'
                 alt='IGSCS LOGO'
                 layout="fill"
                 objectFit="contain"

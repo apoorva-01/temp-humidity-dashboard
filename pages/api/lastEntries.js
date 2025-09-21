@@ -1,5 +1,6 @@
 import Entries from '../../models/Entries';
 import db from '../../utils/db';
+import { getAllowedDeviceEUIs } from '../../utils/deviceConfig';
 
 // Rate limiting
 const requestCounts = new Map();
@@ -45,14 +46,8 @@ export default async function handler(req, res) {
   try {
     await db.connect();
     
-    const devEUIs = [
-      'a8404151518379f9',
-      'a8404181e18379fd',
-      'a8404152a1837a0e',
-      'a840417eb1837a01',
-      'a84041c2718379fe',
-      'a84041b931837a0a',
-    ];
+    // Get allowed device EUIs from configuration
+    const devEUIs = getAllowedDeviceEUIs();
 
     // Use aggregation pipeline for better performance
     const pipeline = [

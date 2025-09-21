@@ -112,10 +112,11 @@ def hello_world():
 @app.route("/all-devices-comparison",methods=['POST'])
 def comparison():
     try:
-        device_euis = [
+        # Get device EUIs from request, fallback to default if not provided
+        device_euis = request.json.get('device_euis', [
             'a84041b931837a0a', 'a840417eb1837a01', 'a8404181e18379fd',
             'a8404152a1837a0e', 'a8404151518379f9', 'a84041c2718379fe'
-        ]
+        ])
 
         start_date = datetime.strptime(request.json['start_date'], '%Y-%m-%d')
         end_date = datetime.strptime(request.json['end_date'], '%Y-%m-%d')

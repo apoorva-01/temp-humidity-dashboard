@@ -217,7 +217,7 @@ export default function Header() {
               // />
               <Image 
                 className={classes.logotypeIcon} 
-                src='logo.svg' 
+                src='/logo.svg' 
                 alt="logo" 
                 width={isTablet ? 50 : 100}
                 height={isTablet ? 5 : 30}

@@ -39,6 +39,7 @@ import RouterIcon from '@mui/icons-material/Router';
 import WifiIcon from '@mui/icons-material/Wifi';
 import WarningIcon from '@mui/icons-material/Warning';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
+import { formatLastSeen, getMinutesSince, isDeviceOnline } from "../utils/dateUtils";
 
 const StatWidget = ({ title, value, change, icon, color, alertZones }) => {
   const theme = useTheme();
@@ -118,24 +119,12 @@ const trafficData = [
 const incomeData = [{ name: 'Percent', value: 75 }];
 const incomeColors = ['#4caf50', '#E0E0E0'];
 
-function formatLastSeen(minutes) {
-  if (minutes < 60) {
-    return `${minutes}m ago`;
-  } else if (minutes < 1440) { // less than 24 hours
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h ago`;
-  } else {
-    const days = Math.floor(minutes / 1440);
-    return `${days}d ago`;
-  }
-}
-
 function DeviceCard({ device }) {
   const theme = useTheme();
   const isAlert = !device.isWithinNormalRange;
-  const lastSeenMinutes = Math.floor((new Date() - new Date(device.timestamp)) / (1000 * 60));
-  const isOnline = lastSeenMinutes <= 10;
-  const lastSeenFormatted = formatLastSeen(lastSeenMinutes);
+  const lastSeenMinutes = getMinutesSince(device.timestamp);
+  const isOnline = isDeviceOnline(device.timestamp);
+  const lastSeenFormatted = formatLastSeen(device.timestamp);
 
   return (
     <Card sx={{ 
@@ -344,8 +333,8 @@ export default function LiveData({ organisation }) {
     const humThresholds = organisation[0]?.settings?.humidityThresholds || { min: 40, max: 60 };
 
     devices.forEach(device => {
-      const lastSeenMinutes = Math.floor((now - new Date(device.timestamp)) / (1000 * 60));
-      const isOnline = lastSeenMinutes <= 10;
+      const lastSeenMinutes = getMinutesSince(device.timestamp);
+      const isOnline = isDeviceOnline(device.timestamp);
 
       if (isOnline) {
         onlineCount++;

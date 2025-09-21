@@ -14,6 +14,8 @@ import {
   CircularProgress,
   TablePagination
 } from "@mui/material";
+import { filterAllowedDevices } from "../../utils/deviceConfig";
+import { formatDateForDisplay } from "../../utils/dateUtils";
 var _ = require("lodash");
 
 export default function Devices() {
@@ -43,7 +45,14 @@ export default function Devices() {
           requestOptions
         );
         const data = await response.json();
-        setDevices({ result: data.result || [], totalCount: data.totalCount || 0 });
+        
+        // Filter devices to only show allowed EUIs
+        const filteredDevices = filterAllowedDevices(data.result || []);
+        
+        setDevices({ 
+          result: filteredDevices, 
+          totalCount: filteredDevices.length 
+        });
       } catch (error) {
         console.error('Error fetching devices:', error);
         alert('Please check your internet connection. Either there is no internet connection or the signals are weak');
@@ -103,7 +112,7 @@ export default function Devices() {
           <TableBody>
             {array.map((element) => {
               const formattted_last_seen = element.lastSeenAt 
-                ? new Date(element.lastSeenAt).toLocaleString()
+                ? formatDateForDisplay(element.lastSeenAt)
                 : 'Never Seen';
                 
               return (

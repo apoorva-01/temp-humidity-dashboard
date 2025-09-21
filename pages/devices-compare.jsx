@@ -19,6 +19,7 @@ import { ResponsiveContainer } from "recharts"
 import { Line } from "react-chartjs-2";
 import { DashboardSkeleton } from "../components/ui/Loading/LoadingSkeletons";
 import useAppStore from "../stores/useAppStore";
+import { getAllowedDeviceEUIs } from "../utils/deviceConfig";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -54,6 +55,20 @@ export default function DeviceCompare() {
     const currentDate = new Date()
     currentDate.setHours(0, 0, 0);
     const abortControllerRef = React.useRef(null);
+    
+    // Get allowed device EUIs and create dynamic structure
+    const allowedEUIs = getAllowedDeviceEUIs();
+    const deviceSuffixes = allowedEUIs.map(eui => eui.slice(-4));
+    
+    // Create initial state structure dynamically
+    const createInitialFetchedData = () => {
+        const data = {};
+        deviceSuffixes.forEach(suffix => {
+            data[`tempData${suffix}`] = [];
+            data[`humData${suffix}`] = [];
+        });
+        return data;
+    };
 
     useEffect(() => {
         initialize();
@@ -75,7 +90,7 @@ export default function DeviceCompare() {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const [startDate, SetStartDate] = useState(moment(currentDate, "YYYY-MM-DDTHH:mm:ss").format("YYYY-MM-DD"));
     const [endDate, SetEndDate] = useState(moment(currentDate, "YYYY-MM-DDTHH:mm:ss").add(1, 'days').format("YYYY-MM-DD"));
-    const [fetchedData, SetFetchedData] = useState({ "tempData7a0a": [], "humData7a0a": [], "tempData7a01": [], "humData7a01": [], "tempData79fd": [], "humData79fd": [], "tempData7a0e": [], "humData7a0e": [], "tempData79f9": [], "humData79f9": [], "tempData79fe": [], "humData79fe": [] });
+    const [fetchedData, SetFetchedData] = useState(createInitialFetchedData());
 
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     const MAX_RETRIES = 2;
@@ -109,7 +124,8 @@ export default function DeviceCompare() {
 
             const { data } = await axiosInstance.post(`${baseUrl}/all-devices-comparison`, {
                 start_date: startDate,
-                end_date: endDate
+                end_date: endDate,
+                device_euis: allowedEUIs
             });
             SetFetchedData(data);
             enqueueSnackbar('Data loaded successfully', { variant: 'success' });
@@ -148,335 +164,31 @@ export default function DeviceCompare() {
         setValue(newValue);
     };
 
-    const MaxHumiditydata = {
-        labels: ["12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM", "7 AM", "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM", "10 PM", "11 PM"],
-        datasets: [
-            {
-                label: "Zone 1",
-                data: fetchedData.humData79f9.maxArray,
-                borderColor: [
-                    "red",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 2",
-                data: fetchedData.humData79fd.maxArray,
-                borderColor: [
-                    "green",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 3",
-                data: fetchedData.humData7a0e.maxArray,
-                borderColor: [
-                    "violet",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 4",
-                data: fetchedData.humData7a0a.maxArray,
-                borderColor: [
-                    "orange",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 5",
-                data: fetchedData.humData79fe.maxArray,
-                borderWidth: 1,
-                borderColor: [
-                    "blue",
-                ],
+    // Define colors for each zone
+    const zoneColors = ['red', 'green', 'violet', 'orange', 'blue', 'black', 'purple', 'brown', 'pink', 'gray'];
 
-            },
-            {
-                label: "Zone 6",
-                data: fetchedData.humData7a01.maxArray,
-                borderWidth: 1,
-                borderColor: [
-                    "black",
-                ],
-            }
-        ],
+    // Helper function to create chart data dynamically
+    const createChartData = (dataType, metric) => {
+        const labels = ["12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM", "7 AM", "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM", "10 PM", "11 PM"];
+        
+        const datasets = deviceSuffixes.map((suffix, index) => ({
+            label: `Zone ${index + 1}`,
+            data: fetchedData[`${dataType}Data${suffix}`]?.[`${metric}Array`] || [],
+            borderColor: zoneColors[index % zoneColors.length],
+            borderWidth: 1,
+        }));
+
+        return { labels, datasets };
     };
 
-    const MaxTemperaturedata = {
-        labels: ["12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM", "7 AM", "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM", "10 PM", "11 PM"],
-        datasets: [
-            {
-                label: "Zone 1",
-                data: fetchedData.tempData79f9.maxArray,
-                borderColor: [
-                    "red",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 2",
-                data: fetchedData.tempData79fd.maxArray,
-                borderColor: [
-                    "green",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 3",
-                data: fetchedData.tempData7a0e.maxArray,
-                borderColor: [
-                    "violet",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 4",
-                data: fetchedData.tempData7a0a.maxArray,
-                borderColor: [
-                    "orange",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 5",
-                data: fetchedData.tempData79fe.maxArray,
-                borderWidth: 1,
-                borderColor: [
-                    "blue",
-                ],
+    // Create dynamic chart data
+    const MaxHumiditydata = createChartData('hum', 'max');
+    const MaxTemperaturedata = createChartData('temp', 'max');
+    const AverageHumiditydata = createChartData('hum', 'avg');
+    const AverageTemperaturedata = createChartData('temp', 'avg');
+    const MinHumiditydata = createChartData('hum', 'min');
+    const MinTemperaturedata = createChartData('temp', 'min');
 
-            },
-            {
-                label: "Zone 6",
-                data: fetchedData.tempData7a01.maxArray,
-                borderWidth: 1,
-                borderColor: [
-                    "black",
-                ],
-            }
-        ],
-    };
-
-    const AverageHumiditydata = {
-        labels: ["12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM", "7 AM", "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM", "10 PM", "11 PM"],
-        datasets: [
-            {
-                label: "Zone 1",
-                data: fetchedData.humData79f9.avgArray,
-                borderColor: [
-                    "red",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 2",
-                data: fetchedData.humData79fd.avgArray,
-                borderColor: [
-                    "green",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 3",
-                data: fetchedData.humData7a0e.avgArray,
-                borderColor: [
-                    "violet",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 4",
-                data: fetchedData.humData7a0a.avgArray,
-                borderColor: [
-                    "orange",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 5",
-                data: fetchedData.humData79fe.avgArray,
-                borderWidth: 1,
-                borderColor: [
-                    "blue",
-                ],
-
-            },
-            {
-                label: "Zone 6",
-                data: fetchedData.humData7a01.avgArray,
-                borderWidth: 1,
-                borderColor: [
-                    "black",
-                ],
-            }
-        ],
-    };
-
-    const AverageTemperaturedata = {
-        labels: ["12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM", "7 AM", "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM", "10 PM", "11 PM"],
-        datasets: [
-            {
-                label: "Zone 1",
-                data: fetchedData.tempData79f9.avgArray,
-                borderColor: [
-                    "red",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 2",
-                data: fetchedData.tempData79fd.avgArray,
-                borderColor: [
-                    "green",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 3",
-                data: fetchedData.tempData7a0e.avgArray,
-                borderColor: [
-                    "violet",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 4",
-                data: fetchedData.tempData7a0a.avgArray,
-                borderColor: [
-                    "orange",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 5",
-                data: fetchedData.tempData79fe.avgArray,
-                borderWidth: 1,
-                borderColor: [
-                    "blue",
-                ],
-
-            },
-            {
-                label: "Zone 6",
-                data: fetchedData.tempData7a01.avgArray,
-                borderWidth: 1,
-                borderColor: [
-                    "black",
-                ],
-            }
-        ],
-    };
-
-    const MinHumiditydata = {
-        labels: ["12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM", "7 AM", "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM", "10 PM", "11 PM"],
-        datasets: [
-            {
-                label: "Zone 1",
-                data: fetchedData.humData79f9.minArray,
-                borderColor: [
-                    "red",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 2",
-                data: fetchedData.humData79fd.minArray,
-                borderColor: [
-                    "green",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 3",
-                data: fetchedData.humData7a0e.minArray,
-                borderColor: [
-                    "violet",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 4",
-                data: fetchedData.humData7a0a.minArray,
-                borderColor: [
-                    "orange",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 5",
-                data: fetchedData.humData79fe.minArray,
-                borderWidth: 1,
-                borderColor: [
-                    "blue",
-                ],
-
-            },
-            {
-                label: "Zone 6",
-                data: fetchedData.humData7a01.minArray,
-                borderWidth: 1,
-                borderColor: [
-                    "black",
-                ],
-            }
-        ],
-    };
-
-    const MinTemperaturedata = {
-        labels: ["12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM", "7 AM", "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM", "10 PM", "11 PM"],
-        datasets: [
-            {
-                label: "Zone 1",
-                data: fetchedData.tempData79f9.minArray,
-                borderColor: [
-                    "red",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 2",
-                data: fetchedData.tempData79fd.minArray,
-                borderColor: [
-                    "green",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 3",
-                data: fetchedData.tempData7a0e.minArray,
-                borderColor: [
-                    "violet",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 4",
-                data: fetchedData.tempData7a0a.minArray,
-                borderColor: [
-                    "orange",
-                ],
-                borderWidth: 1,
-            },
-            {
-                label: "Zone 5",
-                data: fetchedData.tempData79fe.minArray,
-                borderWidth: 1,
-                borderColor: [
-                    "blue",
-                ],
-
-            },
-            {
-                label: "Zone 6",
-                data: fetchedData.tempData7a01.minArray,
-                borderWidth: 1,
-                borderColor: [
-                    "black",
-                ],
-            }
-        ],
-    };
 
     return (
         <Layout>
